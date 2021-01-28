@@ -26,9 +26,15 @@ import com.ververica.flink.table.gateway.rest.result.ColumnInfo;
 import com.ververica.flink.table.gateway.rest.result.ConstantNames;
 import com.ververica.flink.table.gateway.rest.result.ResultKind;
 import com.ververica.flink.table.gateway.rest.result.ResultSet;
-import com.ververica.flink.table.gateway.result.*;
+import com.ververica.flink.table.gateway.result.BatchResult;
+import com.ververica.flink.table.gateway.result.ChangelogResult;
+import com.ververica.flink.table.gateway.result.Result;
+import com.ververica.flink.table.gateway.result.ResultDescriptor;
+import com.ververica.flink.table.gateway.result.ResultUtil;
+import com.ververica.flink.table.gateway.result.TypedResult;
 import com.ververica.flink.table.gateway.utils.SqlExecutionException;
 import com.ververica.flink.table.gateway.utils.SqlGatewayException;
+
 import org.apache.flink.api.common.JobID;
 import org.apache.flink.api.dag.Pipeline;
 import org.apache.flink.api.java.tuple.Tuple2;
@@ -45,10 +51,15 @@ import org.apache.flink.table.types.logical.VarCharType;
 import org.apache.flink.table.types.logical.utils.LogicalTypeUtils;
 import org.apache.flink.table.types.utils.DataTypeUtils;
 import org.apache.flink.types.Row;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Operation for SELECT command.

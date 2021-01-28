@@ -27,6 +27,7 @@ import com.ververica.flink.table.gateway.rest.result.ConstantNames;
 import com.ververica.flink.table.gateway.rest.result.ResultKind;
 import com.ververica.flink.table.gateway.rest.result.ResultSet;
 import com.ververica.flink.table.gateway.utils.SqlExecutionException;
+
 import org.apache.flink.api.common.JobID;
 import org.apache.flink.api.dag.Pipeline;
 import org.apache.flink.api.java.tuple.Tuple2;
@@ -37,6 +38,7 @@ import org.apache.flink.table.api.TableEnvironment;
 import org.apache.flink.table.types.logical.BigIntType;
 import org.apache.flink.table.types.logical.VarCharType;
 import org.apache.flink.types.Row;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +57,7 @@ public class InsertOperation extends AbstractJobOperation {
 	private final String statement;
 	// insert into sql match pattern
 	private static final Pattern INSERT_SQL_PATTERN = Pattern.compile("(INSERT\\s+(INTO|OVERWRITE).*)",
-		Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+			Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 
 	private final List<ColumnInfo> columnInfos;
 
@@ -66,7 +68,7 @@ public class InsertOperation extends AbstractJobOperation {
 		this.statement = statement;
 
 		this.columnInfos = Collections.singletonList(
-			ColumnInfo.create(tableIdentifier, new BigIntType(false)));
+				ColumnInfo.create(tableIdentifier, new BigIntType(false)));
 	}
 
 	@Override
@@ -74,10 +76,10 @@ public class InsertOperation extends AbstractJobOperation {
 		jobId = executeUpdateInternal(context.getExecutionContext());
 		String strJobId = jobId.toString();
 		return ResultSet.builder()
-			.resultKind(ResultKind.SUCCESS_WITH_CONTENT)
-			.columns(ColumnInfo.create(ConstantNames.JOB_ID, new VarCharType(false, strJobId.length())))
-			.data(Row.of(strJobId))
-			.build();
+				.resultKind(ResultKind.SUCCESS_WITH_CONTENT)
+				.columns(ColumnInfo.create(ConstantNames.JOB_ID, new VarCharType(false, strJobId.length())))
+				.data(Row.of(strJobId))
+				.build();
 	}
 
 	@Override
@@ -98,7 +100,7 @@ public class InsertOperation extends AbstractJobOperation {
 				// TODO get affected_row_count for batch job
 				fetched = true;
 				return Optional.of(Tuple2.of(Collections.singletonList(
-					Row.of((long) Statement.SUCCESS_NO_INFO)), null));
+						Row.of((long) Statement.SUCCESS_NO_INFO)), null));
 			} else {
 				// TODO throws exception if the job fails
 				return Optional.of(Tuple2.of(Collections.emptyList(), null));

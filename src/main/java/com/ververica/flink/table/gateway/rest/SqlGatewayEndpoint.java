@@ -67,7 +67,6 @@ public class SqlGatewayEndpoint extends RestServerEndpoint {
 	protected List<Tuple2<RestHandlerSpecification, ChannelInboundHandler>> initializeHandlers(
 		CompletableFuture<String> localAddressFuture) {
 		Time timeout = Time.seconds(1);
-
 		final SessionCreateHandler sessionCreateHandler = new SessionCreateHandler(
 			sessionManager, timeout, responseHeaders, SessionCreateHeaders.getInstance());
 

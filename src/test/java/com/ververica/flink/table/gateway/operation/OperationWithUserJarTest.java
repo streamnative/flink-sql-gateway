@@ -26,12 +26,14 @@ import com.ververica.flink.table.gateway.rest.result.ConstantNames;
 import com.ververica.flink.table.gateway.rest.result.ResultKind;
 import com.ververica.flink.table.gateway.rest.result.ResultSet;
 import com.ververica.flink.table.gateway.utils.ResourceFileUtils;
+
 import org.apache.flink.client.cli.DefaultCLI;
 import org.apache.flink.client.deployment.DefaultClusterClientServiceLoader;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.table.types.logical.BooleanType;
 import org.apache.flink.types.Row;
+
 import org.junit.Test;
 
 import java.io.File;
@@ -41,7 +43,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test for operations when user jars are provided.
@@ -55,11 +59,11 @@ public class OperationWithUserJarTest extends OperationTestBase {
 	protected DefaultContext getDefaultContext() {
 		URL jarUrl = compileUserDefinedSource();
 		return new DefaultContext(
-			new Environment(),
-			Collections.singletonList(jarUrl),
-			new Configuration(),
-			new DefaultCLI(),
-			new DefaultClusterClientServiceLoader());
+				new Environment(),
+				Collections.singletonList(jarUrl),
+				new Configuration(),
+				new DefaultCLI(),
+				new DefaultClusterClientServiceLoader());
 	}
 
 	@Test
@@ -67,7 +71,7 @@ public class OperationWithUserJarTest extends OperationTestBase {
 		createUserDefinedSource(context, "R");
 
 		CreateViewOperation createViewOperation = new CreateViewOperation(
-			context, "MyView1", "SELECT * FROM R");
+				context, "MyView1", "SELECT * FROM R");
 		ResultSet createViewResult = createViewOperation.execute();
 		assertEquals(OperationUtil.OK, createViewResult);
 
@@ -91,19 +95,19 @@ public class OperationWithUserJarTest extends OperationTestBase {
 		ResultSet resultSet = operation.execute();
 
 		List<Row> expectedData = Arrays.asList(
-			Row.of("a", "INT", true, null, null, null),
-			Row.of("b", "BIGINT", true, null, null, null));
+				Row.of("a", "INT", true, null, null, null),
+				Row.of("b", "BIGINT", true, null, null, null));
 		ResultSet expected = ResultSet.builder()
-			.resultKind(ResultKind.SUCCESS_WITH_CONTENT)
-			.columns(
-				ColumnInfo.create(ConstantNames.DESCRIBE_NAME, DataTypes.STRING().getLogicalType()),
-				ColumnInfo.create(ConstantNames.DESCRIBE_TYPE, DataTypes.STRING().getLogicalType()),
-				ColumnInfo.create(ConstantNames.DESCRIBE_NULL, new BooleanType()),
-				ColumnInfo.create(ConstantNames.DESCRIBE_KEY, DataTypes.STRING().getLogicalType()),
-				ColumnInfo.create(ConstantNames.DESCRIBE_COMPUTED_COLUMN, DataTypes.STRING().getLogicalType()),
-				ColumnInfo.create(ConstantNames.DESCRIBE_WATERMARK, DataTypes.STRING().getLogicalType()))
-			.data(expectedData)
-			.build();
+				.resultKind(ResultKind.SUCCESS_WITH_CONTENT)
+				.columns(
+						ColumnInfo.create(ConstantNames.DESCRIBE_NAME, DataTypes.STRING().getLogicalType()),
+						ColumnInfo.create(ConstantNames.DESCRIBE_TYPE, DataTypes.STRING().getLogicalType()),
+						ColumnInfo.create(ConstantNames.DESCRIBE_NULL, new BooleanType()),
+						ColumnInfo.create(ConstantNames.DESCRIBE_KEY, DataTypes.STRING().getLogicalType()),
+						ColumnInfo.create(ConstantNames.DESCRIBE_COMPUTED_COLUMN, DataTypes.STRING().getLogicalType()),
+						ColumnInfo.create(ConstantNames.DESCRIBE_WATERMARK, DataTypes.STRING().getLogicalType()))
+				.data(expectedData)
+				.build();
 
 		assertEquals(expected, resultSet);
 	}
@@ -116,13 +120,13 @@ public class OperationWithUserJarTest extends OperationTestBase {
 		ResultSet resultSet = operation.execute();
 
 		String expectedExplain = ResourceFileUtils.readAll(
-			"plan/operation-with-user-jar-test.test-explain.expected");
+				"plan/operation-with-user-jar-test.test-explain.expected");
 		OperationTestUtils.compareExplainResult(expectedExplain, resultSet);
 	}
 
 	private URL compileUserDefinedSource() {
 		File resourceFile = new File(
-			OperationTestBase.class.getClassLoader().getResource("service-file/test-random-source-file").getFile());
+				OperationTestBase.class.getClassLoader().getResource("service-file/test-random-source-file").getFile());
 		File jarFile = new File(resourceFile.getParent() + "/../../random-source-test-jar.jar");
 		try {
 			return jarFile.toURI().toURL();
@@ -133,12 +137,12 @@ public class OperationWithUserJarTest extends OperationTestBase {
 
 	private void createUserDefinedSource(SessionContext context, String name) {
 		String ddl = "CREATE TABLE " + name + "(\n" +
-			"  a INT,\n" +
-			"  b BIGINT\n" +
-			") WITH (\n" +
-			"  'connector.type' = 'random',\n" +
-			"  'random.limit' = '10'\n" +
-			")";
+				"  a INT,\n" +
+				"  b BIGINT\n" +
+				") WITH (\n" +
+				"  'connector.type' = 'random',\n" +
+				"  'random.limit' = '10'\n" +
+				")";
 		DDLOperation createTableOperation = new DDLOperation(context, ddl, SqlCommandParser.SqlCommand.CREATE_TABLE);
 		ResultSet createTableResult = createTableOperation.execute();
 		assertEquals(OperationUtil.OK, createTableResult);

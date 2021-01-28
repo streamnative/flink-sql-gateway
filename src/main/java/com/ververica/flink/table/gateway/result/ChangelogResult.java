@@ -21,6 +21,7 @@ package com.ververica.flink.table.gateway.result;
 import com.ververica.flink.table.gateway.sink.CollectStreamTableSink;
 import com.ververica.flink.table.gateway.utils.SqlExecutionException;
 import com.ververica.flink.table.gateway.utils.SqlGatewayException;
+
 import org.apache.flink.api.common.ExecutionConfig;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
@@ -86,7 +87,7 @@ public class ChangelogResult<C> extends AbstractResult<C, Tuple2<Boolean, Row>> 
 		// create table sink
 		// pass binding address and port such that sink knows where to send to
 		collectTableSink = new CollectStreamTableSink(
-			iterator.getBindAddress(), iterator.getPort(), serializer, tableSchema);
+				iterator.getBindAddress(), iterator.getPort(), serializer, tableSchema);
 		retrievalThread = new ResultRetrievalThread();
 
 		this.classLoader = checkNotNull(classLoader);
@@ -102,14 +103,14 @@ public class ChangelogResult<C> extends AbstractResult<C, Tuple2<Boolean, Row>> 
 		retrievalThread.start();
 
 		jobExecutionResultFuture = CompletableFuture.completedFuture(jobClient)
-			.thenCompose(client -> client.getJobExecutionResult())
-			.whenComplete((unused, throwable) -> {
-				if (throwable != null) {
-					executionException.compareAndSet(
-						null,
-						new SqlExecutionException("Error while submitting job.", throwable));
-				}
-			});
+				.thenCompose(client -> client.getJobExecutionResult())
+				.whenComplete((unused, throwable) -> {
+					if (throwable != null) {
+						executionException.compareAndSet(
+								null,
+								new SqlExecutionException("Error while submitting job.", throwable));
+					}
+				});
 	}
 
 	@Override

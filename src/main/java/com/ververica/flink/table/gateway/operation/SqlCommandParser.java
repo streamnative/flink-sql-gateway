@@ -18,14 +18,33 @@
 
 package com.ververica.flink.table.gateway.operation;
 
-import org.apache.calcite.config.Lex;
-import org.apache.calcite.sql.*;
-import org.apache.calcite.sql.parser.SqlParser;
-import org.apache.flink.sql.parser.ddl.*;
+import org.apache.flink.sql.parser.ddl.SqlAlterDatabase;
+import org.apache.flink.sql.parser.ddl.SqlAlterTable;
+import org.apache.flink.sql.parser.ddl.SqlCreateDatabase;
+import org.apache.flink.sql.parser.ddl.SqlCreateTable;
+import org.apache.flink.sql.parser.ddl.SqlCreateView;
+import org.apache.flink.sql.parser.ddl.SqlDropDatabase;
+import org.apache.flink.sql.parser.ddl.SqlDropTable;
+import org.apache.flink.sql.parser.ddl.SqlDropView;
+import org.apache.flink.sql.parser.ddl.SqlUseCatalog;
+import org.apache.flink.sql.parser.ddl.SqlUseDatabase;
 import org.apache.flink.sql.parser.dml.RichSqlInsert;
-import org.apache.flink.sql.parser.dql.*;
+import org.apache.flink.sql.parser.dql.SqlRichDescribeTable;
+import org.apache.flink.sql.parser.dql.SqlShowCatalogs;
+import org.apache.flink.sql.parser.dql.SqlShowDatabases;
+import org.apache.flink.sql.parser.dql.SqlShowFunctions;
+import org.apache.flink.sql.parser.dql.SqlShowTables;
 import org.apache.flink.sql.parser.impl.FlinkSqlParserImpl;
 import org.apache.flink.sql.parser.validate.FlinkSqlConformance;
+
+import org.apache.calcite.config.Lex;
+import org.apache.calcite.sql.SqlDrop;
+import org.apache.calcite.sql.SqlExplain;
+import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlNodeList;
+import org.apache.calcite.sql.SqlSetOption;
+import org.apache.calcite.sql.parser.SqlParser;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -76,7 +95,7 @@ public final class SqlCommandParser {
 						groups[i] = matcher.group(i + 1);
 					}
 					return cmd.operandConverter.apply(groups)
-						.map((operands) -> new SqlCommandCall(cmd, operands));
+							.map((operands) -> new SqlCommandCall(cmd, operands));
 				}
 			}
 		}
@@ -107,31 +126,31 @@ public final class SqlCommandParser {
 		SqlNode node = sqlNodes.get(0);
 		if (node.getKind().belongsTo(SqlKind.QUERY)) {
 			cmd = SqlCommand.SELECT;
-			operands = new String[] { stmt };
+			operands = new String[]{stmt};
 		} else if (node instanceof RichSqlInsert) {
 			RichSqlInsert insertNode = (RichSqlInsert) node;
 			cmd = insertNode.isOverwrite() ? SqlCommand.INSERT_OVERWRITE : SqlCommand.INSERT_INTO;
-			operands = new String[] { stmt, insertNode.getTargetTable().toString() };
+			operands = new String[]{stmt, insertNode.getTargetTable().toString()};
 		} else if (node instanceof SqlShowTables) {
 			cmd = SqlCommand.SHOW_TABLES;
 			operands = new String[0];
 		} else if (node instanceof SqlCreateTable) {
 			cmd = SqlCommand.CREATE_TABLE;
-			operands = new String[] { stmt };
+			operands = new String[]{stmt};
 		} else if (node instanceof SqlDropTable) {
 			cmd = SqlCommand.DROP_TABLE;
-			operands = new String[] { stmt };
+			operands = new String[]{stmt};
 		} else if (node instanceof SqlAlterTable) {
 			cmd = SqlCommand.ALTER_TABLE;
-			operands = new String[] { stmt };
+			operands = new String[]{stmt};
 		} else if (node instanceof SqlCreateView) {
 			// TableEnvironment currently does not support creating view
 			// so we have to perform the modification here
 			SqlCreateView createViewNode = (SqlCreateView) node;
 			cmd = SqlCommand.CREATE_VIEW;
-			operands = new String[] {
-				createViewNode.getViewName().toString(),
-				createViewNode.getQuery().toString()
+			operands = new String[]{
+					createViewNode.getViewName().toString(),
+					createViewNode.getQuery().toString()
 			};
 		} else if (node instanceof SqlDropView) {
 			// TableEnvironment currently does not support dropping view
@@ -154,19 +173,19 @@ public final class SqlCommandParser {
 			}
 
 			cmd = SqlCommand.DROP_VIEW;
-			operands = new String[] { dropViewNode.getViewName().toString(), String.valueOf(ifExists) };
+			operands = new String[]{dropViewNode.getViewName().toString(), String.valueOf(ifExists)};
 		} else if (node instanceof SqlShowDatabases) {
 			cmd = SqlCommand.SHOW_DATABASES;
 			operands = new String[0];
 		} else if (node instanceof SqlCreateDatabase) {
 			cmd = SqlCommand.CREATE_DATABASE;
-			operands = new String[] { stmt };
+			operands = new String[]{stmt};
 		} else if (node instanceof SqlDropDatabase) {
 			cmd = SqlCommand.DROP_DATABASE;
-			operands = new String[] { stmt };
+			operands = new String[]{stmt};
 		} else if (node instanceof SqlAlterDatabase) {
 			cmd = SqlCommand.ALTER_DATABASE;
-			operands = new String[] { stmt };
+			operands = new String[]{stmt};
 		} else if (node instanceof SqlShowCatalogs) {
 			cmd = SqlCommand.SHOW_CATALOGS;
 			operands = new String[0];
@@ -175,33 +194,33 @@ public final class SqlCommandParser {
 			operands = new String[0];
 		} else if (node instanceof SqlUseCatalog) {
 			cmd = SqlCommand.USE_CATALOG;
-			operands = new String[] { ((SqlUseCatalog) node).getCatalogName().getSimple() };
+			operands = new String[]{((SqlUseCatalog) node).getCatalogName().getSimple()};
 		} else if (node instanceof SqlUseDatabase) {
 			cmd = SqlCommand.USE;
-			operands = new String[] { ((SqlUseDatabase) node).getDatabaseName().toString() };
+			operands = new String[]{((SqlUseDatabase) node).getDatabaseName().toString()};
 		} else if (node instanceof SqlRichDescribeTable) {
 			cmd = SqlCommand.DESCRIBE_TABLE;
 			// TODO support describe extended
 			String[] fullTableName = ((SqlRichDescribeTable) node).fullTableName();
 			String escapedName =
-				Stream.of(fullTableName).map(s -> "`" + s + "`").collect(Collectors.joining("."));
-			operands = new String[] { escapedName };
+					Stream.of(fullTableName).map(s -> "`" + s + "`").collect(Collectors.joining("."));
+			operands = new String[]{escapedName};
 		} else if (node instanceof SqlExplain) {
 			cmd = SqlCommand.EXPLAIN;
 			// TODO support explain details
-			operands = new String[] { ((SqlExplain) node).getExplicandum().toString() };
+			operands = new String[]{((SqlExplain) node).getExplicandum().toString()};
 		} else if (node instanceof SqlSetOption) {
 			SqlSetOption setNode = (SqlSetOption) node;
 			// refer to SqlSetOption#unparseAlterOperation
 			if (setNode.getValue() != null) {
 				cmd = SqlCommand.SET;
-				operands = new String[] { setNode.getName().toString(), setNode.getValue().toString() };
+				operands = new String[]{setNode.getName().toString(), setNode.getValue().toString()};
 			} else {
 				cmd = SqlCommand.RESET;
 				if (setNode.getName().toString().toUpperCase().equals("ALL")) {
 					operands = new String[0];
 				} else {
-					operands = new String[] { setNode.getName().toString() };
+					operands = new String[]{setNode.getName().toString()};
 				}
 			}
 		} else {
@@ -224,26 +243,26 @@ public final class SqlCommandParser {
 	private static SqlParser.Config createSqlParserConfig(boolean isBlinkPlanner) {
 		if (isBlinkPlanner) {
 			return SqlParser
-				.configBuilder()
-				.setParserFactory(FlinkSqlParserImpl.FACTORY)
-				.setConformance(FlinkSqlConformance.DEFAULT)
-				.setLex(Lex.JAVA)
-				.setIdentifierMaxLength(256)
-				.build();
+					.configBuilder()
+					.setParserFactory(FlinkSqlParserImpl.FACTORY)
+					.setConformance(FlinkSqlConformance.DEFAULT)
+					.setLex(Lex.JAVA)
+					.setIdentifierMaxLength(256)
+					.build();
 		} else {
 			return SqlParser
-				.configBuilder()
-				.setParserFactory(FlinkSqlParserImpl.FACTORY)
-				.setConformance(FlinkSqlConformance.DEFAULT)
-				.setLex(Lex.JAVA)
-				.build();
+					.configBuilder()
+					.setParserFactory(FlinkSqlParserImpl.FACTORY)
+					.setConformance(FlinkSqlConformance.DEFAULT)
+					.setLex(Lex.JAVA)
+					.build();
 		}
 	}
 
 	// --------------------------------------------------------------------------------------------
 
 	private static final Function<String[], Optional<String[]>> NO_OPERANDS =
-		(operands) -> Optional.of(new String[0]);
+			(operands) -> Optional.of(new String[0]);
 
 	private static final int DEFAULT_PATTERN_FLAGS = Pattern.CASE_INSENSITIVE | Pattern.DOTALL;
 
@@ -294,34 +313,34 @@ public final class SqlCommandParser {
 		// the following commands are not supported by SQL parser but are needed by users
 
 		SET(
-			"SET",
-			// `SET` with operands can be parsed by SQL parser
-			// we keep `SET` with no operands here to print all properties
-			NO_OPERANDS),
+				"SET",
+				// `SET` with operands can be parsed by SQL parser
+				// we keep `SET` with no operands here to print all properties
+				NO_OPERANDS),
 
 		// the following commands will be supported by SQL parser in the future
 		// remove them once they're supported
 
 		// FLINK-17396
 		SHOW_MODULES(
-			"SHOW\\s+MODULES",
-			NO_OPERANDS),
+				"SHOW\\s+MODULES",
+				NO_OPERANDS),
 
 		// FLINK-17111
 		SHOW_VIEWS(
-			"SHOW\\s+VIEWS",
-			NO_OPERANDS),
+				"SHOW\\s+VIEWS",
+				NO_OPERANDS),
 
 		// the following commands are not supported by SQL parser but are needed by JDBC driver
 		// these should not be exposed to the user and should be used internally
 
 		SHOW_CURRENT_CATALOG(
-			"SHOW\\s+CURRENT\\s+CATALOG",
-			NO_OPERANDS),
+				"SHOW\\s+CURRENT\\s+CATALOG",
+				NO_OPERANDS),
 
 		SHOW_CURRENT_DATABASE(
-			"SHOW\\s+CURRENT\\s+DATABASE",
-			NO_OPERANDS);
+				"SHOW\\s+CURRENT\\s+DATABASE",
+				NO_OPERANDS);
 
 		public final Pattern pattern;
 		public final Function<String[], Optional<String[]>> operandConverter;

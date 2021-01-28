@@ -21,7 +21,12 @@ package com.ververica.flink.table.gateway.deployment;
 import org.apache.flink.api.dag.Pipeline;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.DeploymentOptions;
-import org.apache.flink.core.execution.*;
+import org.apache.flink.core.execution.DefaultExecutorServiceLoader;
+import org.apache.flink.core.execution.JobClient;
+import org.apache.flink.core.execution.PipelineExecutor;
+import org.apache.flink.core.execution.PipelineExecutorFactory;
+import org.apache.flink.core.execution.PipelineExecutorServiceLoader;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,8 +47,8 @@ public class ProgramDeployer {
 	 * Deploys a table program on the cluster.
 	 *
 	 * @param configuration the {@link Configuration} that is used for deployment
-	 * @param jobName job name of the Flink job to be submitted
-	 * @param pipeline Flink {@link Pipeline} to execute
+	 * @param jobName       job name of the Flink job to be submitted
+	 * @param pipeline      Flink {@link Pipeline} to execute
 	 */
 	public ProgramDeployer(
 			Configuration configuration,

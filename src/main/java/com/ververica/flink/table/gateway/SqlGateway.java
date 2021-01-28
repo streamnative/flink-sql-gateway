@@ -23,11 +23,13 @@ import com.ververica.flink.table.gateway.context.DefaultContext;
 import com.ververica.flink.table.gateway.rest.SqlGatewayEndpoint;
 import com.ververica.flink.table.gateway.rest.session.SessionManager;
 import com.ververica.flink.table.gateway.utils.SqlGatewayException;
+
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.RestOptions;
 import org.apache.flink.runtime.rest.RestServerEndpointConfiguration;
 import org.apache.flink.runtime.util.EnvironmentInformation;
 import org.apache.flink.util.JarUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,8 +73,8 @@ public class SqlGateway {
 		sessionManager = new SessionManager(defaultContext);
 
 		endpoint = new SqlGatewayEndpoint(
-			RestServerEndpointConfiguration.fromConfiguration(configuration),
-			sessionManager);
+				RestServerEndpointConfiguration.fromConfiguration(configuration),
+				sessionManager);
 		endpoint.start();
 		System.out.println("Rest endpoint started.");
 
@@ -140,9 +142,9 @@ public class SqlGateway {
 				System.out.println();
 				System.out.println();
 				LOG.error("Gateway must stop. Unexpected exception. This is a bug. Please consider filing an issue.",
-					t);
+						t);
 				throw new SqlGatewayException(
-					"Unexpected exception. This is a bug. Please consider filing an issue.", t);
+						"Unexpected exception. This is a bug. Please consider filing an issue.", t);
 			}
 		}
 	}

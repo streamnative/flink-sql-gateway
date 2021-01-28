@@ -23,9 +23,11 @@ import com.ververica.flink.table.gateway.config.entries.ExecutionEntry;
 import com.ververica.flink.table.gateway.context.DefaultContext;
 import com.ververica.flink.table.gateway.context.SessionContext;
 import com.ververica.flink.table.gateway.rest.session.SessionID;
+
 import org.apache.flink.client.cli.DefaultCLI;
 import org.apache.flink.client.deployment.DefaultClusterClientServiceLoader;
 import org.apache.flink.configuration.Configuration;
+
 import org.junit.Before;
 
 import java.util.Collections;
@@ -42,19 +44,19 @@ public class OperationTestBase {
 	@Before
 	public void setup() throws Exception {
 		context = new SessionContext(
-			"test-session",
-			SessionID.generate().toString(),
-			getSessionEnvironment(),
-			getDefaultContext());
+				"test-session",
+				SessionID.generate().toString(),
+				getSessionEnvironment(),
+				getDefaultContext());
 	}
 
 	protected DefaultContext getDefaultContext() {
 		return new DefaultContext(
-			new Environment(),
-			Collections.emptyList(),
-			new Configuration(),
-			new DefaultCLI(),
-			new DefaultClusterClientServiceLoader());
+				new Environment(),
+				Collections.emptyList(),
+				new Configuration(),
+				new DefaultCLI(),
+				new DefaultClusterClientServiceLoader());
 	}
 
 	protected Environment getSessionEnvironment() throws Exception {

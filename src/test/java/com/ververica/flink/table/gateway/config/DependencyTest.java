@@ -29,14 +29,19 @@ import com.ververica.flink.table.gateway.rest.session.SessionManager;
 import com.ververica.flink.table.gateway.sink.TestTableSinkFactoryBase;
 import com.ververica.flink.table.gateway.source.TestTableSourceFactoryBase;
 import com.ververica.flink.table.gateway.utils.EnvironmentFileUtil;
+
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.client.cli.DefaultCLI;
 import org.apache.flink.client.deployment.DefaultClusterClientServiceLoader;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.shaded.guava18.com.google.common.collect.Maps;
 import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.table.api.TableSchema;
-import org.apache.flink.table.catalog.*;
+import org.apache.flink.table.catalog.Catalog;
+import org.apache.flink.table.catalog.CatalogDatabaseImpl;
+import org.apache.flink.table.catalog.CatalogTable;
+import org.apache.flink.table.catalog.CatalogTableImpl;
+import org.apache.flink.table.catalog.GenericInMemoryCatalog;
+import org.apache.flink.table.catalog.ObjectPath;
 import org.apache.flink.table.catalog.config.CatalogConfig;
 import org.apache.flink.table.catalog.exceptions.CatalogException;
 import org.apache.flink.table.catalog.exceptions.DatabaseAlreadyExistException;
@@ -53,11 +58,20 @@ import org.apache.flink.table.module.Module;
 import org.apache.flink.table.types.DataType;
 import org.apache.flink.table.types.logical.BooleanType;
 import org.apache.flink.types.Row;
+
+import org.apache.flink.shaded.guava18.com.google.common.collect.Maps;
+
 import org.junit.Test;
 
 import java.net.URL;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import static org.apache.flink.table.descriptors.CatalogDescriptorValidator.CATALOG_DEFAULT_DATABASE;
 import static org.apache.flink.table.descriptors.CatalogDescriptorValidator.CATALOG_TYPE;
@@ -93,11 +107,11 @@ public class DependencyTest {
 		// create executor with dependencies
 		final URL dependency = Paths.get("target", TABLE_FACTORY_JAR_FILE).toUri().toURL();
 		DefaultContext defaultContext = new DefaultContext(
-			env,
-			Collections.singletonList(dependency),
-			new Configuration(),
-			new DefaultCLI(),
-			new DefaultClusterClientServiceLoader());
+				env,
+				Collections.singletonList(dependency),
+				new Configuration(),
+				new DefaultCLI(),
+				new DefaultClusterClientServiceLoader());
 		SessionManager sessionManager = new SessionManager(defaultContext);
 		String sessionId = sessionManager.createSession("test", "blink", "streaming", Maps.newConcurrentMap());
 		Session session = sessionManager.getSession(sessionId);
@@ -105,20 +119,20 @@ public class DependencyTest {
 		assertEquals(SqlCommand.DESCRIBE_TABLE, result.f1);
 
 		final List<Row> expectedData = Arrays.asList(
-			Row.of("IntegerField1", "INT", true, null, null, null),
-			Row.of("StringField1", "STRING", true, null, null, null),
-			Row.of("rowtimeField", "TIMESTAMP(3) *ROWTIME*", true, null, null, null));
+				Row.of("IntegerField1", "INT", true, null, null, null),
+				Row.of("StringField1", "STRING", true, null, null, null),
+				Row.of("rowtimeField", "TIMESTAMP(3) *ROWTIME*", true, null, null, null));
 		ResultSet expected = ResultSet.builder()
-			.resultKind(ResultKind.SUCCESS_WITH_CONTENT)
-			.columns(
-				ColumnInfo.create(ConstantNames.DESCRIBE_NAME, DataTypes.STRING().getLogicalType()),
-				ColumnInfo.create(ConstantNames.DESCRIBE_TYPE, DataTypes.STRING().getLogicalType()),
-				ColumnInfo.create(ConstantNames.DESCRIBE_NULL, new BooleanType()),
-				ColumnInfo.create(ConstantNames.DESCRIBE_KEY, DataTypes.STRING().getLogicalType()),
-				ColumnInfo.create(ConstantNames.DESCRIBE_COMPUTED_COLUMN, DataTypes.STRING().getLogicalType()),
-				ColumnInfo.create(ConstantNames.DESCRIBE_WATERMARK, DataTypes.STRING().getLogicalType()))
-			.data(expectedData)
-			.build();
+				.resultKind(ResultKind.SUCCESS_WITH_CONTENT)
+				.columns(
+						ColumnInfo.create(ConstantNames.DESCRIBE_NAME, DataTypes.STRING().getLogicalType()),
+						ColumnInfo.create(ConstantNames.DESCRIBE_TYPE, DataTypes.STRING().getLogicalType()),
+						ColumnInfo.create(ConstantNames.DESCRIBE_NULL, new BooleanType()),
+						ColumnInfo.create(ConstantNames.DESCRIBE_KEY, DataTypes.STRING().getLogicalType()),
+						ColumnInfo.create(ConstantNames.DESCRIBE_COMPUTED_COLUMN, DataTypes.STRING().getLogicalType()),
+						ColumnInfo.create(ConstantNames.DESCRIBE_WATERMARK, DataTypes.STRING().getLogicalType()))
+				.data(expectedData)
+				.build();
 
 		assertEquals(expected, result.f0);
 	}
@@ -249,32 +263,32 @@ public class DependencyTest {
 			// and Flink tests should avoid using those hive-site.xml.
 			// Thus, explicitly create a testing HiveConf for unit tests here
 			Catalog hiveCatalog = HiveTestUtils
-				.createHiveCatalog(name, properties.get(HiveCatalogValidator.CATALOG_HIVE_VERSION));
+					.createHiveCatalog(name, properties.get(HiveCatalogValidator.CATALOG_HIVE_VERSION));
 
 			// Creates an additional database to test tableEnv.useDatabase() will switch current database of the catalog
 			hiveCatalog.open();
 			try {
 				hiveCatalog.createDatabase(
-					ADDITIONAL_TEST_DATABASE,
-					new CatalogDatabaseImpl(new HashMap<>(), null),
-					false);
+						ADDITIONAL_TEST_DATABASE,
+						new CatalogDatabaseImpl(new HashMap<>(), null),
+						false);
 				hiveCatalog.createTable(
-					new ObjectPath(ADDITIONAL_TEST_DATABASE, TEST_TABLE),
-					new CatalogTableImpl(
-						TableSchema.builder()
-							.field("testcol", DataTypes.INT())
-							.build(),
-						new HashMap<String, String>() {{
-							put(CatalogConfig.IS_GENERIC, String.valueOf(false));
-						}},
-						""
-					),
-					false
+						new ObjectPath(ADDITIONAL_TEST_DATABASE, TEST_TABLE),
+						new CatalogTableImpl(
+								TableSchema.builder()
+										.field("testcol", DataTypes.INT())
+										.build(),
+								new HashMap<String, String>() {{
+									put(CatalogConfig.IS_GENERIC, String.valueOf(false));
+								}},
+								""
+						),
+						false
 				);
 				// create a table to test parameterized types
 				hiveCatalog.createTable(new ObjectPath("default", TABLE_WITH_PARAMETERIZED_TYPES),
-					tableWithParameterizedTypes(),
-					false);
+						tableWithParameterizedTypes(),
+						false);
 			} catch (DatabaseAlreadyExistException | TableAlreadyExistException | DatabaseNotExistException e) {
 				throw new CatalogException(e);
 			}
@@ -283,14 +297,14 @@ public class DependencyTest {
 		}
 
 		private CatalogTable tableWithParameterizedTypes() {
-			TableSchema tableSchema = TableSchema.builder().fields(new String[] { "dec", "ch", "vch" },
-				new DataType[] { DataTypes.DECIMAL(10, 10), DataTypes.CHAR(5), DataTypes.VARCHAR(15) }).build();
+			TableSchema tableSchema = TableSchema.builder().fields(new String[]{"dec", "ch", "vch"},
+					new DataType[]{DataTypes.DECIMAL(10, 10), DataTypes.CHAR(5), DataTypes.VARCHAR(15)}).build();
 			return new CatalogTableImpl(
-				tableSchema,
-				new HashMap<String, String>() {{
-					put(CatalogConfig.IS_GENERIC, String.valueOf(false));
-				}},
-				"");
+					tableSchema,
+					new HashMap<String, String>() {{
+						put(CatalogConfig.IS_GENERIC, String.valueOf(false));
+					}},
+					"");
 		}
 	}
 }
